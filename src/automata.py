@@ -3,12 +3,13 @@
 
 def load_automata(filename):
     """Chama arquivo e abre."""
+
     try:
-        with open(filename, encoding="utf-8") as arq:
-            arquivo = arq.readlines()
-            linha = arquivo.split("\n")
-    except OSError:
-        print "OOpa, deu erro pra ler o arquivo, viu?"
+        with open(filename, "rt") as arquivo:
+            linha = arquivo.readlines()
+            pass
+    except:
+        print("Arquivo inválido")
 
 # pylint: disable=global-statement
         global ESTADOINICIAL
