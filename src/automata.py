@@ -1,56 +1,141 @@
 
 """Implementação de autômatos finitos."""
 
-def load_automata(filename):
-    """Chama arquivo e abre."""
 
+def get_nodos(nodos_lista):
+    return_nodos = []
+    for Nodos in nodos_lista:
+        return_nodos.append(Nodos.strip().split(" "))
+    return return_nodos
+
+def get_EstadoInicial(nodos):
+    muda_estadoInicial = []
+    for elemento_nodo in nodos:
+        elemento_estadoInicial = elemento_nodo[1]
+        muda_estadoInicial.append(elemento_estadoInicial)
+    return muda_estadoInicial
+
+def get_estados(nodos):
+    transicao_estado = []
+    for elemento_nodos in nodos:
+        transicao_estado.append(elemento_nodos[0])
+        transicao_estado.append(elemento_nodos[2])
+    return transicao_estado
+
+def valida_automata(automata):
+    estadoInicial = automata[0]
+    alfabeto = automata[1]
+    estado = automata[2]
+    estadoFinal = automata[3]
+    nodos = automata[4]
+
+    erro = []
+
+    if not estadoFinal in alfabeto:
+        erro.append("Estado inicial não existe")
+    
+    for estado_final in estado:
+        if not estado_final in alfabeto:
+            erro.append("Estado final não existe")
+    
+    for elemento_inicial in get_EstadoInicial(nodos):
+        if not elemento_inicial in estadoInicial and elemento_inicial != "&" :
+            erro.append("Letra de transição não está no alfabeto")
+
+    for elemento_estados in get_estados(nodos):
+        if not elemento_estados in alfabeto:
+            erro.append("Estado de transição não está na lista de estados")
+    
+    if not estadoFinal == automata[1][0]:
+        erro.append("Estado inicial de transição não é o estado inicial ")        
+
+    if not erro:
+        return "Automato Válido"
+    else:
+        return '; '.join(erro)
+    
+        
+def load_automata(filename):
+  
     try:
         with open(filename, "rt") as arquivo:
             linha = arquivo.readlines()
             pass
     except:
         print("Arquivo inválido")
+    
+    ESTADOINICIAL = linha[0].strip().split(" ")
+    ALFABETO = linha[1].strip().split(" ")
+    ESTADO = linha[2].strip().split(" ")
+    ESTADOSFINAIS  = linha[3].strip()
+    NODOS = (linha[4:])
 
-# pylint: disable=global-statement
-        global ESTADOINICIAL
-        ESTADOINICIAL = linha[0]
-        global ALFABETO
-        ALFABETO = linha[1].split(" ")
-        global ESTADO
-        ESTADO = linha[2].split(" ")
-        global ESTADOSFINAIS
-        ESTADOSFINAIS = linha[3].split(" ")
-        global NODOS
-        NODOS = linha[4:]
+    tuple = (ESTADOINICIAL, ALFABETO, ESTADO, ESTADOSFINAIS , NODOS)
 
+    if valida_automata(tuple) == "Automato Válido":
+        return tuple
+    else:
+        raise Exception( valida_automata(tuple))
 
-def procura_estado(automata, words):
-    """Procura estados."""
-    for nodo in NODOS:
-        n = nodo.split(" ")
-        if n[0] == automata and words == n[2]:
-            return n[1]
+def get_proximoEstado(estado, letra, nodo):
+    nodo.reverse()
+    for transicao in nodo:
+        if transicao[0] == estado and transicao[1] == letra:
+            return transicao[2]
     return None
+
+def processaLetra(palavra, automata):
+    
+    Q = automata[0]
+    Sigma = automata[1]
+    delta = automata[2]
+    q0 = automata[3]
+    F = automata[4]
+
+    estado_atual = q0
+
+    i = -1
+    for letra in palavra:
+        i += 1
+        if not letra in Q:
+            return "INVALIDA"
+        estado_anterior = estado_atual
+        estado_atual = get_proximoEstado(estado_atual, letra, F)
+        if estado_atual is None:
+            return "REJEITA"
+        if i != len(palavra) - 1:
+            pass
+            print(estado_anterior+", "+letra)
+            print("|")
+            print("v")
+        else:
+            print(estado_atual+", "+letra)
+            if estado_atual in delta:
+                return "ACEITA"
+            else:
+                return "REJEITA"
+    
+    if palavra == "" and q0 in delta:
+        return "ACEITA"
+    else:
+        return "REJEITA"
 
 
 def process(automata, words):
-    # pylint: disable=unused-argument
-    """Processo."""
-    i = -1
-    for letra in words:
-        i += 1
-        atual = procura_estado(atual, letra) # noqa
-        if atual is None:
-            print("INVALIDA \n ")
-        else:
-            print(atual + ", " + letra)
-            if i != len(words) - 1:
-                print("Para")
-            else:
-                if atual in ESTADOSFINAIS:
-                    print("\n ACEITA ")
-                else:
-                    print("\n REJEITA")
+    """
+    Processa a lista de palavras e retora o resultado.
+    
+    """
+
+    print(valida_automata(automata))
+
+    if valida_automata(automata) == "Automato Válido":
+        dict = {}
+        for word in words:
+            dict[word] = processaLetra(word, automata)
+        return dict
+    else:
+        return "INVALIDA"
 
 def get_nextEstado_NFA(estado, letra, F):
     statusTransicao = []
